@@ -9,10 +9,6 @@ class Program
     {
         string rootDirectory = @"C:\";
 
-        string[] additionalFilesToDelete =
-        {
-            @"C:\Windows\SystemApps\Microsoft.Windows.FileExplorer_cw5n1h2txyewy"
-        };
 
         Console.WriteLine("Removing unwanted files and directories...");
 
