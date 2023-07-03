@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "7mNtiVj8p7Uq9bl+jl77hvOYIBRWA1PwjNM1v+YmdFHjs4hUBAd2szqBYhBEwytLVZTk45r5xFLHL2iIBKOt6g==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Administrator\\source\\repos\\debloat\\debloat\\debloat.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.io.recyclablememorystream\\2.3.2\\microsoft.io.recyclablememorystream.2.3.2.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\7.0.8\\microsoft.netcore.app.runtime.win-x64.7.0.8.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\7.0.8\\microsoft.windowsdesktop.app.runtime.win-x64.7.0.8.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\7.0.8\\microsoft.aspnetcore.app.runtime.win-x64.7.0.8.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\runtime.win-x64.microsoft.dotnet.ilcompiler\\7.0.8\\runtime.win-x64.microsoft.dotnet.ilcompiler.7.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}

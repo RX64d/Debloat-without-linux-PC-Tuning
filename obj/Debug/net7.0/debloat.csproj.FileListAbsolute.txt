@@ -1,0 +1,17 @@
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\debloat.exe
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\debloat.deps.json
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\debloat.runtimeconfig.json
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\debloat.dll
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\debloat.pdb
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.csproj.AssemblyReference.cache
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.AssemblyInfoInputs.cache
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.AssemblyInfo.cs
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.dll
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\refint\debloat.dll
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.pdb
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.genruntimeconfig.cache
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\ref\debloat.dll
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Debug\net7.0\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\Administrator\source\repos\debloat\debloat\obj\Debug\net7.0\debloat.csproj.CopyComplete

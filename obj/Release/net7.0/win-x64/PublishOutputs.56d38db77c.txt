@@ -1,0 +1,2 @@
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Release\net7.0\win-x64\publish\debloat.exe
+C:\Users\Administrator\source\repos\debloat\debloat\bin\Release\net7.0\win-x64\publish\debloat.pdb
