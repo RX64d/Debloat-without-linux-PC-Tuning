@@ -1,31 +1,24 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 
 class Program
 {
     static void Main()
     {
-        string rootDirectory = @"C:\";
+        if (IsWindows11())
+        {
+            Console.WriteLine("Windows 11 detected. Skipping file deletion.");
+            Console.ReadLine();
+            return;
+        }
 
+        string rootDirectory = @"C:\";
 
         Console.WriteLine("Removing unwanted files and directories...");
 
-        foreach (string fileToDelete in additionalFilesToDelete)
-        {
-            if (File.Exists(fileToDelete))
-            {
-                SafeDeleteFile(fileToDelete);
-            }
-            else
-            {
-                Console.WriteLine($"File '{fileToDelete}' not found.");
-            }
-        }
-
         string programFilesPath = Path.Combine(rootDirectory, "Program Files");
-        string system32Path = Path.Combine(rootDirectory, "Windows/System32");
+        string system32Path = Path.Combine(rootDirectory, "Windows", "System32");
 
         if (!Directory.Exists(programFilesPath) || !Directory.Exists(system32Path))
         {
@@ -35,124 +28,85 @@ class Program
         }
 
         string windowsAppsPath = Path.Combine(programFilesPath, "WindowsApps");
+        RemoveDirectory(windowsAppsPath);
 
-        GrantAccessToAdministrators(windowsAppsPath);
-
-        if (Directory.Exists(windowsAppsPath))
-        {
-            ExecutePowerShellCommand($"Remove-Item -Path \"{windowsAppsPath}\" -Recurse -Force");
-        }
-        else
-        {
-            Console.WriteLine($"Location '{windowsAppsPath}' not found.");
-        }
-
-        string programDataPath = Path.Combine(rootDirectory, "ProgramData/Packages");
-
-        GrantAccessToAdministrators(programDataPath);
-
-        if (Directory.Exists(programDataPath))
-        {
-            ExecutePowerShellCommand($"Remove-Item -Path \"{programDataPath}\" -Recurse -Force");
-        }
-        else
-        {
-            Console.WriteLine($"Location '{programDataPath}' not found.");
-        }
+        string programDataPath = Path.Combine(rootDirectory, "ProgramData", "Packages");
+        RemoveDirectory(programDataPath);
 
         string usersAppDataPath = Path.Combine(rootDirectory, "Users");
-        string[] userDirectories = Directory.GetDirectories(usersAppDataPath, "*", SearchOption.TopDirectoryOnly);
+        DirectoryInfo usersDirectory = new DirectoryInfo(usersAppDataPath);
+        DirectoryInfo[] userDirectories = usersDirectory.GetDirectories();
 
-        foreach (string userDirectory in userDirectories)
+        Parallel.ForEach(userDirectories, userDirectory =>
         {
-            string windowsAppsUserPath = Path.Combine(userDirectory, "AppData/Local/Microsoft/WindowsApps");
-            if (Directory.Exists(windowsAppsUserPath))
-            {
-                GrantAccessToAdministrators(windowsAppsUserPath);
+            string windowsAppsUserPath = Path.Combine(userDirectory.FullName, "AppData", "Local", "Microsoft", "WindowsApps");
+            string packagesUserPath = Path.Combine(userDirectory.FullName, "AppData", "Local", "Packages");
 
-                ExecutePowerShellCommand($"Remove-Item -Path \"{windowsAppsUserPath}\" -Recurse -Force");
-            }
-            else
-            {
-                Console.WriteLine($"Location '{windowsAppsUserPath}' not found.");
-            }
+            RemoveDirectory(windowsAppsUserPath);
+            RemoveDirectory(packagesUserPath);
+        });
 
-            string packagesUserPath = Path.Combine(userDirectory, "AppData/Local/Packages");
-            if (Directory.Exists(packagesUserPath))
-            {
-                GrantAccessToAdministrators(packagesUserPath);
-
-                ExecutePowerShellCommand($"Remove-Item -Path \"{packagesUserPath}\" -Recurse -Force");
-            }
-            else
-            {
-                Console.WriteLine($"Location '{packagesUserPath}' not found.");
-            }
-        }
-
-        string systemAppsPath = Path.Combine(rootDirectory, "Windows/SystemApps");
-
-        GrantAccessToAdministrators(systemAppsPath);
-
-        if (Directory.Exists(systemAppsPath))
-        {
-            ExecutePowerShellCommand($"Remove-Item -Path \"{systemAppsPath}\" -Recurse -Force");
-        }
-        else
-        {
-            Console.WriteLine($"Location '{systemAppsPath}' not found.");
-        }
+        string systemAppsPath = Path.Combine(rootDirectory, "Windows", "SystemApps");
+        RemoveDirectory(systemAppsPath);
 
         string system32FilePath = Path.Combine(system32Path, "smartscreen.exe");
-
-        if (File.Exists(system32FilePath))
-        {
-            SafeDeleteFile(system32FilePath);
-        }
-        else
-        {
-            Console.WriteLine($"File '{system32FilePath}' not found.");
-        }
+        ExecutePowerShellCommand($"Remove-Item -Path \"{system32FilePath}\" -Force");
 
         Console.WriteLine("Cleanup complete.");
         Console.ReadLine();
     }
 
-    static void GrantAccessToAdministrators(string path)
+    static void RemoveDirectory(string directoryPath)
     {
-        Process process = new Process();
-        process.StartInfo.FileName = "icacls.exe";
-        process.StartInfo.Arguments = $"\"{path}\" /grant administrators:F";
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.CreateNoWindow = true;
-        process.Start();
-        process.WaitForExit();
+        if (Directory.Exists(directoryPath))
+        {
+            GrantAccessToAdministrators(directoryPath);
+            ExecutePowerShellCommand($"Remove-Item -Path \"{directoryPath}\" -Recurse -Force");
+        }
+        else
+        {
+            Console.WriteLine($"Location '{directoryPath}' not found.");
+        }
     }
 
-    static void SafeDeleteFile(string path)
+    static void GrantAccessToAdministrators(string path)
     {
-        try
-        {
-            File.SetAttributes(path, FileAttributes.Normal);
-            File.Delete(path);
-            Console.WriteLine($"Deleted file: {path}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting file '{path}': {ex.Message}");
-        }
+        ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.FileName = "icacls.exe";
+        startInfo.Arguments = $"\"{path}\" /grant administrators:F";
+        startInfo.UseShellExecute = false;
+        startInfo.RedirectStandardOutput = true;
+        startInfo.CreateNoWindow = true;
+
+        Process process = new Process();
+        process.StartInfo = startInfo;
+        process.Start();
+        process.WaitForExit();
     }
 
     static void ExecutePowerShellCommand(string command)
     {
+        ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.FileName = "powershell.exe";
+        startInfo.Arguments = $"-Command \"{command}\"";
+        startInfo.UseShellExecute = false;
+        startInfo.RedirectStandardOutput = true;
+        startInfo.CreateNoWindow = true;
+
         Process process = new Process();
-        process.StartInfo.FileName = "powershell.exe";
-        process.StartInfo.Arguments = $"-Command \"{command}\"";
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.CreateNoWindow = true;
+        process.StartInfo = startInfo;
         process.Start();
         process.WaitForExit();
+    }
+
+    static bool IsWindows11()
+    {
+        var osVersion = Environment.OSVersion;
+        if (osVersion.Platform == PlatformID.Win32NT && osVersion.Version.Major == 10 && osVersion.Version.Minor >= 0 && osVersion.Version.Build >= 22000)
+        {
+            return true;
+        }
+
+        return false;
     }
 }
