@@ -5,29 +5,38 @@ using System.Runtime.InteropServices;
 
 class Program
 {
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    public static extern bool DeleteFile(string lpFileName);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    public static extern bool RemoveDirectory(string lpPathName);
-
     static void Main()
     {
         string rootDirectory = @"C:\";
 
-        string[] wildcardNames = { "onedrive", "edge" };
+        string[] additionalFilesToDelete =
+        {
+            @"C:\Windows\SystemApps\Microsoft.Windows.FileExplorer_cw5n1h2txyewy"
+        };
+
+        Console.WriteLine("Removing unwanted files and directories...");
+
+        foreach (string fileToDelete in additionalFilesToDelete)
+        {
+            if (File.Exists(fileToDelete))
+            {
+                SafeDeleteFile(fileToDelete);
+            }
+            else
+            {
+                Console.WriteLine($"File '{fileToDelete}' not found.");
+            }
+        }
 
         string programFilesPath = Path.Combine(rootDirectory, "Program Files");
         string system32Path = Path.Combine(rootDirectory, "Windows/System32");
 
         if (!Directory.Exists(programFilesPath) || !Directory.Exists(system32Path))
         {
-            Console.WriteLine("error: directory does not appear to be the root directory of a Windows installation");
+            Console.WriteLine("Error: Directory does not appear to be the root directory of a Windows installation.");
             Console.ReadLine();
             Environment.Exit(1);
         }
-
-        Console.WriteLine("Removing unwanted files and directories...");
 
         string windowsAppsPath = Path.Combine(programFilesPath, "WindowsApps");
 
@@ -35,7 +44,7 @@ class Program
 
         if (Directory.Exists(windowsAppsPath))
         {
-            SafeDeleteDirectory(windowsAppsPath);
+            ExecutePowerShellCommand($"Remove-Item -Path \"{windowsAppsPath}\" -Recurse -Force");
         }
         else
         {
@@ -48,7 +57,7 @@ class Program
 
         if (Directory.Exists(programDataPath))
         {
-            SafeDeleteDirectory(programDataPath);
+            ExecutePowerShellCommand($"Remove-Item -Path \"{programDataPath}\" -Recurse -Force");
         }
         else
         {
@@ -65,7 +74,7 @@ class Program
             {
                 GrantAccessToAdministrators(windowsAppsUserPath);
 
-                SafeDeleteDirectory(windowsAppsUserPath);
+                ExecutePowerShellCommand($"Remove-Item -Path \"{windowsAppsUserPath}\" -Recurse -Force");
             }
             else
             {
@@ -77,7 +86,7 @@ class Program
             {
                 GrantAccessToAdministrators(packagesUserPath);
 
-                SafeDeleteDirectory(packagesUserPath);
+                ExecutePowerShellCommand($"Remove-Item -Path \"{packagesUserPath}\" -Recurse -Force");
             }
             else
             {
@@ -91,7 +100,7 @@ class Program
 
         if (Directory.Exists(systemAppsPath))
         {
-            SafeDeleteDirectory(systemAppsPath);
+            ExecutePowerShellCommand($"Remove-Item -Path \"{systemAppsPath}\" -Recurse -Force");
         }
         else
         {
@@ -109,119 +118,45 @@ class Program
             Console.WriteLine($"File '{system32FilePath}' not found.");
         }
 
-        string windowsFilePath = Path.Combine(system32Path, "mobsync.exe");
-
-        if (File.Exists(windowsFilePath))
-        {
-            SafeDeleteFile(windowsFilePath);
-        }
-        else
-        {
-            Console.WriteLine($"File '{windowsFilePath}' not found.");
-        }
-
-        foreach (string wildcardName in wildcardNames)
-        {
-            string[] foundDirectories = Directory.GetDirectories(rootDirectory, $"*{wildcardName}*", SearchOption.AllDirectories);
-
-            foreach (string foundDirectory in foundDirectories)
-            {
-                if (!foundDirectory.Contains("bin"))
-                {
-                    SafeDeleteDirectory(foundDirectory);
-                }
-            }
-        }
-
-        // Additional deletion commands
-        string[] additionalDirectoriesToDelete =
-        {
-            @"ProgramData/Packages",
-            @"Users/*/AppData/Local/Microsoft/WindowsApps",
-            @"Users/*/AppData/Local/Packages",
-            @"Windows/SystemApps"
-        };
-
-        foreach (string directoryToDelete in additionalDirectoriesToDelete)
-        {
-            string[] foundDirectories = Directory.GetDirectories(rootDirectory, directoryToDelete, SearchOption.AllDirectories);
-
-            foreach (string foundDirectory in foundDirectories)
-            {
-                if (!foundDirectory.Contains("bin"))
-                {
-                    SafeDeleteDirectory(foundDirectory);
-                }
-            }
-        }
-
-        string[] additionalFilesToDelete =
-        {
-            @"Windows/System32/smartscreen.exe",
-            @"Windows/System32/mobsync.exe"
-        };
-
-        foreach (string fileToDelete in additionalFilesToDelete)
-        {
-            string[] foundFiles = Directory.GetFiles(rootDirectory, fileToDelete, SearchOption.AllDirectories);
-
-            foreach (string foundFile in foundFiles)
-            {
-                if (!foundFile.Contains("bin"))
-                {
-                    SafeDeleteFile(foundFile);
-                }
-            }
-        }
-
-        Console.WriteLine("Cleanup completed successfully.");
+        Console.WriteLine("Cleanup complete.");
         Console.ReadLine();
-        Environment.Exit(0);
-    }
-
-    static void SafeDeleteDirectory(string directoryPath)
-    {
-        try
-        {
-            RemoveDirectory(directoryPath);
-            Console.WriteLine($"Location '{directoryPath}' found and deleted.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting location '{directoryPath}': {ex.Message}");
-        }
-    }
-
-    static void SafeDeleteFile(string filePath)
-    {
-        try
-        {
-            DeleteFile(filePath);
-            Console.WriteLine($"File '{filePath}' found and deleted.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error deleting file '{filePath}': {ex.Message}");
-        }
     }
 
     static void GrantAccessToAdministrators(string path)
     {
         Process process = new Process();
-        process.StartInfo.FileName = "cmd.exe";
-        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-        process.StartInfo.CreateNoWindow = true;
+        process.StartInfo.FileName = "icacls.exe";
+        process.StartInfo.Arguments = $"\"{path}\" /grant administrators:F";
         process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.CreateNoWindow = true;
         process.Start();
+        process.WaitForExit();
+    }
 
-        string takeOwnCommand = string.Format("TAKEOWN /F \"{0}\" /A", path);
-        process.StandardInput.WriteLine(takeOwnCommand);
-        string icaclsCommand = string.Format("ICACLS \"{0}\" /GRANT Administrators:(F)", path);
-        process.StandardInput.WriteLine(icaclsCommand);
-        process.StandardInput.Close();
+    static void SafeDeleteFile(string path)
+    {
+        try
+        {
+            File.SetAttributes(path, FileAttributes.Normal);
+            File.Delete(path);
+            Console.WriteLine($"Deleted file: {path}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting file '{path}': {ex.Message}");
+        }
+    }
 
+    static void ExecutePowerShellCommand(string command)
+    {
+        Process process = new Process();
+        process.StartInfo.FileName = "powershell.exe";
+        process.StartInfo.Arguments = $"-Command \"{command}\"";
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.CreateNoWindow = true;
+        process.Start();
         process.WaitForExit();
     }
 }
