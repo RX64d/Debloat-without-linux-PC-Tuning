@@ -10,6 +10,7 @@ if you want to do your own build use the command "dotnet publish -r win-x64 -c R
 and after exit the final file will be "net7.0\win-x64-native".
 
 Credit:
+
 https://github.com/amitxv/PC-Tuning
 
 https://github.com/M2TeamArchived/NSudo
